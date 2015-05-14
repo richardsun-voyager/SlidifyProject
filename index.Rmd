@@ -1,0 +1,52 @@
+---
+title       : Predicting With Trees
+subtitle    : Course Project for Developing Data Products
+author      : Richard Soon
+job         : Teaching Assistant
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : []            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Summary
+
+In this presentation, we use methods learned in Machine Learning course to predict the classes of Iris data.
+Let's look at the data first
+```{r, echo=TRUE}
+data(iris);library(ggplot2)
+names(iris)
+table(iris$Species)
+```
+
+---  .class #id
+
+## Create training and testing sets
+```{r, echo=TRUE}
+library(caret)
+inTest<-createDataPartition(y=iris$Species,p=0.25,list=FALSE)
+training<-iris[-inTest,]
+testing<-iris[inTest,]
+dim(training);dim(testing)
+```
+
+---  .class #id
+
+## Plot trees
+```{r, echo=TRUE}
+library(rpart);library(rattle)
+fit<-train(Species~.,method="rpart",data=training)
+fancyRpartPlot(fit$finalModel)
+```
+
+---  .class #id
+
+## Check the accuracy of prediction
+```{r, echo=TRUE}
+result<-predict(fit,newdata=testing)
+confusionMatrix(testing$Species,result)
+```
+
+
