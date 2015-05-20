@@ -1,5 +1,5 @@
 ---
-title       : Predicting With Trees
+title       : Exponential Distribution Simulation
 subtitle    : Course Project for Developing Data Products
 author      : Richard Soon
 job         : Teaching Assistant
@@ -11,109 +11,86 @@ mode        : selfcontained # {standalone, draft}
 knit        : slidify::knit2slides
 ---
 
-## Summary
-
-In this presentation, we use methods learned in Machine Learning course to predict the classes of Iris data.
-Let's look at the data first
+## Create ShinyUI
+In order to contain both the main interface and supporting document,we use tab pages.The first tab page defines the input parameters and output methods.
 
 ```r
-data(iris);library(ggplot2)
-names(iris)
+    tabPanel("Plot", sidebarLayout(sidebarPanel(
+    h2('Exponential Distribution Simulation Settings'),
+    sliderInput('lambda', 'Numeric input, labeled lambda', 0.05, min = 0.05, max = 1, step = 0.05),
+    numericInput('popSize',  "Population Size",10,min=10,max=100,step=10),
+    numericInput('repTimes',  "Repetition Times",100,min=100,max=2000,step=100),
+    checkboxInput("meanLine", "Show the Mean Line", FALSE)
+    ), mainPanel(h2('Distribution of Average'),plotOutput('figure'))
+   )  
 ```
-
-```
-## [1] "Sepal.Length" "Sepal.Width"  "Petal.Length" "Petal.Width" 
-## [5] "Species"
-```
-
-```r
-table(iris$Species)
-```
-
-```
-## 
-##     setosa versicolor  virginica 
-##         50         50         50
-```
-
----  .class #id
-
-## Create training and testing sets
+And the second page shows the supporting document
 
 ```r
-library(caret)
+   tabPanel("Supporting Document", h3("This application aims to...."),
+   p("1.Users can set ..... "), p("2.Users can choose ......") )
+  )
 ```
 
-```
-## Loading required package: lattice
-```
+--- .class #id 
 
-```r
-inTest<-createDataPartition(y=iris$Species,p=0.25,list=FALSE)
-training<-iris[-inTest,]
-testing<-iris[inTest,]
-dim(training);dim(testing)
-```
-
-```
-## [1] 111   5
-```
-
-```
-## [1] 39  5
-```
-
----  .class #id
-
-## Plot trees
+## Create Server
+Using the input values,we create a matrix of exponentional samples, then calculate average of each population.Finally,we plot a histogram of averages.
 
 ```r
-library(rpart);library(rattle)
-fit<-train(Species~.,method="rpart",data=training)
-fancyRpartPlot(fit$finalModel)
+cfunc <- function(x,lambda,n) sqrt(n) * (mean(x) - 1/lambda) / 1/lambda
+shinyServer(
+function(input, output) {
+output$figure<-renderPlot({
+lambda<-input$lambda;n<-input$popSize;scale<-input$repTimes
+set.seed(111)
+expArray<-matrix(rexp(n*scale,lambda),scale) 
+meanArray<-apply(expArray,1,cfunc,lambda,n) 
+hist(meanArray,breaks=20,freq=FALSE,xlab="Mean of The Samples",main="Histogram Of Averages of Exponential Distribution")
+if(input$meanLine) abline(v=0,col="red",lwd=3)
+})})
 ```
 
-![plot of chunk unnamed-chunk-3](assets/fig/unnamed-chunk-3-1.png) 
+--- .class #id 
 
----  .class #id
-
-## Check the accuracy of prediction
+## Install Shinyapps Packages
+Complete and save those codes in ui.r and server.r respectively in a directory DeployFiles, start the shiny application on your computer.
 
 ```r
-result<-predict(fit,newdata=testing)
-confusionMatrix(testing$Species,result)
+runApp("DeployFiles")
+```
+You will see the application in a webpage.If you hope to publish this application online,you need install shinyapps packages from CRAN.
+
+```r
+install.packages('devtools')
+```
+With devtools installed you can install the shinyapps package directly from the GitHub. Run following code in your R console:
+
+```r
+devtools::install_github('rstudio/shinyapps')
 ```
 
+--- .class #id 
+
+## Deploy Applications Online
+Before we upload our application online,we should create an account on shinyapps.io website.Once we have done that,we're ready to deploy our shiny application.Remember,set the path where your ui.r and server.r located.
+
+```r
+library(shinyapps);library(rmarkdown)
+deployApp("DeployFiles")
 ```
-## Confusion Matrix and Statistics
-## 
-##             Reference
-## Prediction   setosa versicolor virginica
-##   setosa         13          0         0
-##   versicolor      0         12         1
-##   virginica       0          1        12
-## 
-## Overall Statistics
-##                                           
-##                Accuracy : 0.9487          
-##                  95% CI : (0.8268, 0.9937)
-##     No Information Rate : 0.3333          
-##     P-Value [Acc > NIR] : 7.509e-16       
-##                                           
-##                   Kappa : 0.9231          
-##  Mcnemar's Test P-Value : NA              
-## 
-## Statistics by Class:
-## 
-##                      Class: setosa Class: versicolor Class: virginica
-## Sensitivity                 1.0000            0.9231           0.9231
-## Specificity                 1.0000            0.9615           0.9615
-## Pos Pred Value              1.0000            0.9231           0.9231
-## Neg Pred Value              1.0000            0.9615           0.9615
-## Prevalence                  0.3333            0.3333           0.3333
-## Detection Rate              0.3333            0.3077           0.3077
-## Detection Prevalence        0.3333            0.3333           0.3333
-## Balanced Accuracy           1.0000            0.9423           0.9423
+In the working director,we'll find a shinyapps folder.Also,the application has been installed on shinyapps.io successfully.Here's my link:
+
+```r
+browseURL("https://topsun888.shinyapps.io/DeployFiles")
 ```
+The interface of this application is as following:
+
+```r
+browseURL("Exponential Distribution.JPG")
+```
+
+
+
 
 

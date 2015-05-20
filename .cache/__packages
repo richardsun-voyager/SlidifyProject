@@ -1,7 +1,7 @@
 base
-slidify
-rpart
+shiny
 ggplot2
-lattice
-caret
-rattle
+shinyapps
+slidify
+knitr
+rmarkdown

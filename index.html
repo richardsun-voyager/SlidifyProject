@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Predicting With Trees</title>
+  <title>Exponential Distribution Simulation</title>
   <meta charset="utf-8">
-  <meta name="description" content="Predicting With Trees">
+  <meta name="description" content="Exponential Distribution Simulation">
   <meta name="author" content="Richard Soon">
   <meta name="generator" content="slidify" />
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,7 +32,7 @@
     <!-- LOGO SLIDE -->
         <slide class="title-slide segue nobackground">
   <hgroup class="auto-fadein">
-    <h1>Predicting With Trees</h1>
+    <h1>Exponential Distribution Simulation</h1>
     <h2>Course Project for Developing Data Products</h2>
     <p>Richard Soon<br/>Teaching Assistant</p>
   </hgroup>
@@ -43,26 +43,26 @@
     <!-- SLIDES -->
     <slide class="" id="slide-1" style="background:;">
   <hgroup>
-    <h2>Summary</h2>
+    <h2>Create ShinyUI</h2>
   </hgroup>
   <article data-timings="">
-    <p>In this presentation, we use methods learned in Machine Learning course to predict the classes of Iris data.
-Let&#39;s look at the data first</p>
+    <p>In order to contain both the main interface and supporting document,we use tab pages.The first tab page defines the input parameters and output methods.</p>
 
-<pre><code class="r">data(iris);library(ggplot2)
-names(iris)
+<pre><code class="r">    tabPanel(&quot;Plot&quot;, sidebarLayout(sidebarPanel(
+    h2(&#39;Exponential Distribution Simulation Settings&#39;),
+    sliderInput(&#39;lambda&#39;, &#39;Numeric input, labeled lambda&#39;, 0.05, min = 0.05, max = 1, step = 0.05),
+    numericInput(&#39;popSize&#39;,  &quot;Population Size&quot;,10,min=10,max=100,step=10),
+    numericInput(&#39;repTimes&#39;,  &quot;Repetition Times&quot;,100,min=100,max=2000,step=100),
+    checkboxInput(&quot;meanLine&quot;, &quot;Show the Mean Line&quot;, FALSE)
+    ), mainPanel(h2(&#39;Distribution of Average&#39;),plotOutput(&#39;figure&#39;))
+   )  
 </code></pre>
 
-<pre><code>## [1] &quot;Sepal.Length&quot; &quot;Sepal.Width&quot;  &quot;Petal.Length&quot; &quot;Petal.Width&quot; 
-## [5] &quot;Species&quot;
-</code></pre>
+<p>And the second page shows the supporting document</p>
 
-<pre><code class="r">table(iris$Species)
-</code></pre>
-
-<pre><code>## 
-##     setosa versicolor  virginica 
-##         50         50         50
+<pre><code class="r">   tabPanel(&quot;Supporting Document&quot;, h3(&quot;This application aims to....&quot;),
+   p(&quot;1.Users can set ..... &quot;), p(&quot;2.Users can choose ......&quot;) )
+  )
 </code></pre>
 
   </article>
@@ -71,25 +71,22 @@ names(iris)
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Create training and testing sets</h2>
+    <h2>Create Server</h2>
   </hgroup>
   <article data-timings="">
-    <pre><code class="r">library(caret)
-</code></pre>
+    <p>Using the input values,we create a matrix of exponentional samples, then calculate average of each population.Finally,we plot a histogram of averages.</p>
 
-<pre><code>## Loading required package: lattice
-</code></pre>
-
-<pre><code class="r">inTest&lt;-createDataPartition(y=iris$Species,p=0.25,list=FALSE)
-training&lt;-iris[-inTest,]
-testing&lt;-iris[inTest,]
-dim(training);dim(testing)
-</code></pre>
-
-<pre><code>## [1] 111   5
-</code></pre>
-
-<pre><code>## [1] 39  5
+<pre><code class="r">cfunc &lt;- function(x,lambda,n) sqrt(n) * (mean(x) - 1/lambda) / 1/lambda
+shinyServer(
+function(input, output) {
+output$figure&lt;-renderPlot({
+lambda&lt;-input$lambda;n&lt;-input$popSize;scale&lt;-input$repTimes
+set.seed(111)
+expArray&lt;-matrix(rexp(n*scale,lambda),scale) 
+meanArray&lt;-apply(expArray,1,cfunc,lambda,n) 
+hist(meanArray,breaks=20,freq=FALSE,xlab=&quot;Mean of The Samples&quot;,main=&quot;Histogram Of Averages of Exponential Distribution&quot;)
+if(input$meanLine) abline(v=0,col=&quot;red&quot;,lwd=3)
+})})
 </code></pre>
 
   </article>
@@ -98,15 +95,23 @@ dim(training);dim(testing)
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Plot trees</h2>
+    <h2>Install Shinyapps Packages</h2>
   </hgroup>
   <article data-timings="">
-    <pre><code class="r">library(rpart);library(rattle)
-fit&lt;-train(Species~.,method=&quot;rpart&quot;,data=training)
-fancyRpartPlot(fit$finalModel)
+    <p>Complete and save those codes in ui.r and server.r respectively in a directory DeployFiles, start the shiny application on your computer.</p>
+
+<pre><code class="r">runApp(&quot;DeployFiles&quot;)
 </code></pre>
 
-<p><img src="assets/fig/unnamed-chunk-3-1.png" alt="plot of chunk unnamed-chunk-3"> </p>
+<p>You will see the application in a webpage.If you hope to publish this application online,you need install shinyapps packages from CRAN.</p>
+
+<pre><code class="r">install.packages(&#39;devtools&#39;)
+</code></pre>
+
+<p>With devtools installed you can install the shinyapps package directly from the GitHub. Run following code in your R console:</p>
+
+<pre><code class="r">devtools::install_github(&#39;rstudio/shinyapps&#39;)
+</code></pre>
 
   </article>
   <!-- Presenter Notes -->
@@ -114,42 +119,23 @@ fancyRpartPlot(fit$finalModel)
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Check the accuracy of prediction</h2>
+    <h2>Deploy Applications Online</h2>
   </hgroup>
   <article data-timings="">
-    <pre><code class="r">result&lt;-predict(fit,newdata=testing)
-confusionMatrix(testing$Species,result)
+    <p>Before we upload our application online,we should create an account on shinyapps.io website.Once we have done that,we&#39;re ready to deploy our shiny application.Remember,set the path where your ui.r and server.r located.</p>
+
+<pre><code class="r">library(shinyapps);library(rmarkdown)
+deployApp(&quot;DeployFiles&quot;)
 </code></pre>
 
-<pre><code>## Confusion Matrix and Statistics
-## 
-##             Reference
-## Prediction   setosa versicolor virginica
-##   setosa         13          0         0
-##   versicolor      0         12         1
-##   virginica       0          1        12
-## 
-## Overall Statistics
-##                                           
-##                Accuracy : 0.9487          
-##                  95% CI : (0.8268, 0.9937)
-##     No Information Rate : 0.3333          
-##     P-Value [Acc &gt; NIR] : 7.509e-16       
-##                                           
-##                   Kappa : 0.9231          
-##  Mcnemar&#39;s Test P-Value : NA              
-## 
-## Statistics by Class:
-## 
-##                      Class: setosa Class: versicolor Class: virginica
-## Sensitivity                 1.0000            0.9231           0.9231
-## Specificity                 1.0000            0.9615           0.9615
-## Pos Pred Value              1.0000            0.9231           0.9231
-## Neg Pred Value              1.0000            0.9615           0.9615
-## Prevalence                  0.3333            0.3333           0.3333
-## Detection Rate              0.3333            0.3077           0.3077
-## Detection Prevalence        0.3333            0.3333           0.3333
-## Balanced Accuracy           1.0000            0.9423           0.9423
+<p>In the working director,we&#39;ll find a shinyapps folder.Also,the application has been installed on shinyapps.io successfully.Here&#39;s my link:</p>
+
+<pre><code class="r">browseURL(&quot;https://topsun888.shinyapps.io/DeployFiles&quot;)
+</code></pre>
+
+<p>The interface of this application is as following:</p>
+
+<pre><code class="r">browseURL(&quot;Exponential Distribution.JPG&quot;)
 </code></pre>
 
   </article>
@@ -162,25 +148,25 @@ confusionMatrix(testing$Species,result)
     <ul>
       <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=1 title='Summary'>
+        data-slide=1 title='Create ShinyUI'>
          1
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=2 title='Create training and testing sets'>
+        data-slide=2 title='Create Server'>
          2
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=3 title='Plot trees'>
+        data-slide=3 title='Install Shinyapps Packages'>
          3
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=4 title='Check the accuracy of prediction'>
+        data-slide=4 title='Deploy Applications Online'>
          4
       </a>
     </li>
